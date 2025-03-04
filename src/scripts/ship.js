@@ -1,4 +1,4 @@
-class Ship {
+export default class Ship {
   constructor (length) {
     this.length = length;
     this.timesHit = 0;
@@ -6,13 +6,10 @@ class Ship {
   }
 
   hit () {
-    this.timesHit += 1;
+    if (this.timesHit < this.length) this.timesHit += 1;
   }
 
   isSunk () {
     return this.timesHit >= this.length;
   }
 }
-
-export default Ship;
-//module.exports = Ship;
