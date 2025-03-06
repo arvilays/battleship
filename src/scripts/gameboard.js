@@ -16,11 +16,11 @@ export default class Gameboard {
 
   receiveAttack (coords) {
     const [col, row] = coords;
-    if (col < 0 || col > this.board.length - 1 || row < 0 || row > this.board[0].length - 1) {
+    if (col < 0 || col > this.boardSize - 1 || row < 0 || row > this.boardSize - 1) {
       throw new Error('Invalid coordinate: out of bounds.');
     }
 
-    let target = this.board[col][row];
+    const target = this.board[row][col];
     if (target.hit === false) {
       if (target.ship !== null) target.ship.hit();
       target.hit = true;
@@ -38,7 +38,7 @@ export default class Gameboard {
     // Validate ship placement based on orientation
     if (orientation === 'horizontal') {
       // Check if ship can fit horizontally on board
-      if (col < 0 || col >= this.board[0].length || col + shipSize > this.board[0].length) {
+      if (col < 0 || col >= this.boardSize || col + shipSize > this.boardSize) {
         throw new Error('Invalid horizontal placement.');
       }
 
@@ -55,7 +55,7 @@ export default class Gameboard {
       }
     } else if (orientation === 'vertical') {
       // Check if ship can fit vertically on board
-      if (row < 0 || row >= this.board.length || row + shipSize > this.board.length) {
+      if (row < 0 || row >= this.boardSize || row + shipSize > this.boardSize) {
         throw new Error('Invalid vertical placement.');
       }
 
@@ -73,22 +73,70 @@ export default class Gameboard {
       throw new Error('Invalid orientation, choose either "horizontal" or "vertical".');
     }
     
+    newShip.orientation = orientation;
+    newShip.origin = coords;
     this.ships.push(newShip);
+  }
+
+  // ex. ships = [5, 4, 3, 3, 2]
+  // 1 length-5 ship
+  // 1 length-4 ship
+  // 2 length-3 ships
+  // 1 length-2 ship
+  randomizeShips(ships = [5, 4, 3, 3, 2]) {
+    for (let i = 0; i < ships.length; i++) {
+      let placed = false;
+      let attempts = 0;
+
+      while (!placed && attempts < 100) { // Retry up to 100 times
+        attempts++;
+        
+        // Get a random position and orientation
+        const x = this.#getRandomInt(this.boardSize);
+        const y = this.#getRandomInt(this.boardSize);
+        const orientation = this.#getRandomInt(2) === 0 ? 'horizontal' : 'vertical';
+      
+        // Check if the ship can be placed without overlapping
+        placed = true;
+        try {
+          this.placeShip([x, y], ships[i], orientation);
+        } catch {
+          placed = false;
+        }
+      }
+
+      if (!placed) {
+        throw new Error(`Cound not place ship of size ${ships[i]} after 100 attempts`);
+      }
+    }
+  }
+
+  checkLoss () {
+    return this.ships.every(item => item && item.isSunk());
+  }
+
+  reset() {
+    this.board = [];
+    this.ships = [];
   }
 
   toString () {
     let string = "";
-    for (let i = 0; i < this.board.length; i++) {
-      for (let j = 0; j < this.board[i].length; j++) {
-        let hit = this.board[i][j].hit;
-        let ship = this.board[i][j].ship;
-        if (hit === true && ship !== null) string += '✗ ';
-        else if (hit === false && ship !== null) string += '◯ ';
+    for (let i = 0; i < this.boardSize; i++) {
+      for (let j = 0; j < this.boardSize; j++) {
+        const hit = this.board[i][j].hit;
+        const ship = this.board[i][j].ship;
+        if (hit === true && ship !== null) string += 'x ';
+        else if (hit === false && ship !== null) string += 'o ';
         else if (hit === true && ship === null) string += '* ';
         else string += ". ";
       }
       string += "\n";
     }
     return string;
+  }
+
+  #getRandomInt(max) {
+    return Math.floor(Math.random() * max);
   }
 }
