@@ -17,10 +17,10 @@ export default (function () {
     }
   };
 
-  const trigger = (eventName, data) => {
+  const trigger = (eventName, ...data) => {
     if (events[eventName]) {
       events[eventName].forEach(function (fn) {
-        fn(data);
+        fn(...data);
       });
     }
   };
