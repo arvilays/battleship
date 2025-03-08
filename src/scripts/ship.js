@@ -2,7 +2,6 @@ export default class Ship {
   constructor (length) {
     this.length = length;
     this.timesHit = 0;
-    this.sunk = false;
     this.orientation = 'horizontal';
     this.origin = [0,0];
   }
@@ -26,7 +25,7 @@ export default class Ship {
     for (let i = 0; i < this.length; i++) {
       coords.push([xOrigin + xOffset * i, yOrigin + yOffset * i]);
     }
-    
+
     return coords;
   }
 }
