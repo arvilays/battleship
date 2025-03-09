@@ -1,3 +1,6 @@
+import eyeOpenImage from '../images/eye-outline.svg';
+import eyeClosedImage from '../images/eye-closed.svg';
+
 import Events from './events.js';
 
 export default class Display {
@@ -13,7 +16,7 @@ export default class Display {
     this.match.style.display = 'none';
   }
 
-  renderBoard(player) {
+  renderBoard (player) {
     const boardGrid = player.gameboardDOM.querySelector('.board-grid');
     const boardSize = player.gameboard.boardSize;
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -55,24 +58,48 @@ export default class Display {
     }
   }
 
-  showBoard(player) {
+  showBoard (player) {
     const colors = ['purple', 'green', 'orange', 'royalblue', 'pink'];
     this.colorAllShips(player, colors);
   }
 
-  hideBoard(player) {
+  hideBoard (player) {
     const colors = ['white'];
     this.colorAllShips(player, colors);
   }
 
-  getShipBoxDOM(player, coords) {
+  updateTurn (playerOne, playerTwo) {
+    if (playerOne.isCurrentTurn) {
+      playerOne.gameboardDOM.querySelector('.ferry').style.left = '605px';
+      playerOne.gameboardDOM.querySelector('.target').style.top = '0px';
+      playerTwo.gameboardDOM.querySelector('.target').style.top = '200px';
+      playerOne.gameboardDOM.querySelector('.board-title').style.color = 'darkred';
+      playerTwo.gameboardDOM.querySelector('.board-title').style.color = 'green';
+      playerOne.gameboardDOM.querySelector('.board-grid').style.boxShadow = '0px 0px 50px red';
+      playerTwo.gameboardDOM.querySelector('.board-grid').style.boxShadow = 'revert';
+      playerOne.gameboardDOM.querySelector('.eye').style.bottom = '100px';
+      playerTwo.gameboardDOM.querySelector('.eye').style.bottom = '0px';
+    } else {
+      playerOne.gameboardDOM.querySelector('.ferry').style.left = '25px';
+      playerOne.gameboardDOM.querySelector('.target').style.top = '200px';
+      playerTwo.gameboardDOM.querySelector('.target').style.top = '0px';
+      playerOne.gameboardDOM.querySelector('.board-title').style.color = 'green';
+      playerTwo.gameboardDOM.querySelector('.board-title').style.color = 'darkred';
+      playerOne.gameboardDOM.querySelector('.board-grid').style.boxShadow = 'revert';
+      playerTwo.gameboardDOM.querySelector('.board-grid').style.boxShadow = '0px 0px 50px red';
+      playerOne.gameboardDOM.querySelector('.eye').style.bottom = '0px';
+      playerTwo.gameboardDOM.querySelector('.eye').style.bottom = '100px';
+    }
+  }
+
+  getShipBoxDOM (player, coords) {
     const [row, col] = coords;
     const coordString = `${col}-${row}`;
     return player.gameboardDOM.querySelector(`.BOX${coordString}`);
   }
 
   // 'force' will color the ships regardless of hit/sunk status
-  colorAllShips(player, colors, force = false) {
+  colorAllShips (player, colors, force = false) {
     const ships = player.gameboard.ships;
     for (let i = 0; i < ships.length; i++) {
       const shipCoords = ships[i].getCoords();
@@ -87,7 +114,7 @@ export default class Display {
     }
   }
 
-  colorShip(player, coords, color) {
+  colorShip (player, coords, color) {
     const [row, col] = coords;
     const shipBox = this.getShipBoxDOM(player, coords);
     if (shipBox) {
@@ -97,7 +124,7 @@ export default class Display {
     }
   }
 
-  toggleScreens() {
+  toggleScreens () {
     const fadeDuration = 250;
     if (this.start.style.display === 'flex') {
       this.start.style.opacity = "0%";

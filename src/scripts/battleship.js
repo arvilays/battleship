@@ -35,20 +35,18 @@ export default class Battleship {
       this.playerTwo = setupPlayer('CPU', this.display.boardTwo);
       this.playerTwo.gameboard.randomizeShips(); // REMOVE LATER
       this.playerTwo.isCurrentTurn = true;
+      this.playerOne.gameboardDOM.querySelector('.eye').style.visibility = 'hidden';
+      this.playerTwo.gameboardDOM.querySelector('.eye').style.visibility = 'hidden';
     } else { // versus
       this.playerTwo = setupPlayer('Player 2', this.display.boardTwo);
       this.playerTwo.gameboard.randomizeShips();
       this.playerTwo.isCurrentTurn = this.playerOne.isCurrentTurn ? false : true;
-    }
-
-    // Color board depending on who goes first
-    if (this.playerOne.isCurrentTurn) {
-      this.playerOne.gameboardDOM.querySelector('.board-grid').style.boxShadow = '0px 0px 50px red';
-    } else {
-      this.playerTwo.gameboardDOM.querySelector('.board-grid').style.boxShadow = '0px 0px 50px red';
+      this.playerOne.gameboardDOM.querySelector('.eye').style.visibility = 'visible';
+      this.playerTwo.gameboardDOM.querySelector('.eye').style.visibility = 'visible';
     }
 
     // Render and show the boards
+    this.display.updateTurn(this.playerOne, this.playerTwo);
     this.display.renderBoard(this.playerOne);
     this.display.renderBoard(this.playerTwo);
     this.display.showBoard(this.playerOne);
@@ -63,7 +61,7 @@ export default class Battleship {
       if (!shipBox.hit) {
         const shipBoxDOM = this.display.getShipBoxDOM(player, coords);
         shipBox.hit = true;
-        shipBoxDOM.textContent = 'X';
+        shipBoxDOM.textContent = '💥';
 
         if (shipBox.ship) {
           shipBox.ship.hit();
@@ -88,13 +86,7 @@ export default class Battleship {
   #endTurn () {
     this.playerOne.isCurrentTurn = !this.playerOne.isCurrentTurn;
     this.playerTwo.isCurrentTurn = !this.playerTwo.isCurrentTurn;
-    if (this.playerOne.isCurrentTurn) {
-      this.playerOne.gameboardDOM.querySelector('.board-grid').style.boxShadow = '0px 0px 50px red';
-      this.playerTwo.gameboardDOM.querySelector('.board-grid').style.boxShadow = 'revert';
-    } else {
-      this.playerOne.gameboardDOM.querySelector('.board-grid').style.boxShadow = 'revert';
-      this.playerTwo.gameboardDOM.querySelector('.board-grid').style.boxShadow = '0px 0px 50px red';
-    }
+    this.display.updateTurn(this.playerOne, this.playerTwo);
   }
 
   #endGame (loser) {

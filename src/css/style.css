@@ -70,18 +70,18 @@ body {
 }
 
 /**** BOARD ****/
-@media only screen and (min-width: 0px) {
+@media only screen and (min-width: 0px) {    
   .board-title {
     font-size: 3em;
     text-align: center;
   }
 
   .board-grid {
+    z-index: 1;
     background-color: skyblue;
     font-size: 1.25em;
     display: flex;
     flex-direction: column;
-    gap: 2px;
     margin-top: 10px;
     padding: 20px;
     border-radius: 20px;
@@ -90,16 +90,18 @@ body {
   }
 
   .row {
+    z-index: inherit;
     display: flex;
-    gap: 2px;
   }
 
   .box {
+    z-index: inherit;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 40px;
     height: 40px;
+    border: 1px solid skyblue;
   }
 
   .inside-grid:hover {
@@ -109,5 +111,56 @@ body {
 
   .inside-grid {
     background-color: white;
+  }
+
+  .indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 35px;
+  }
+
+  .ferry, .target {
+    position: relative;
+    z-index: -1;
+    
+    display: flex;
+    justify-content: center;
+    transition: all 0.5s;
+  }
+
+  .ferry {
+    left: 25px;
+  }
+
+  .target {
+    right: 25px;
+  }
+
+  .ferry-image, .target-image {
+    width: 50px;
+  }
+
+  .eye {
+    position: relative;
+    bottom: 100px;
+
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+
+    transition: all 0.5s;
+  }
+
+  .eye-image {
+    width: 50px;
+    opacity: 20%;
+
+    transition: all 0.5s;
+  }
+
+  .eye-image:hover {
+    cursor: pointer;
+    opacity: 100%;
   }
 }
