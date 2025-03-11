@@ -6,5 +6,6 @@ export default class Player {
     this.gameboard = new Gameboard();
     this.gameboardDOM = gameboardDOM;
     this.isCurrentTurn = false;
+    this.isCPU = false;
   }
 }

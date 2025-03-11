@@ -9,7 +9,7 @@ export default class Gameboard {
     for (let i = 0; i < this.boardSize; i++) {
       this.board[i] = [];
       for (let j = 0; j < this.boardSize; j++) {
-        this.board[i][j] = { hit: false, ship: null };
+        this.board[i][j] = { hit: false, ship: null, coords: [j, i] };
       }
     }
   }

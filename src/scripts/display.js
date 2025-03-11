@@ -50,7 +50,13 @@ export default class Display {
         box.className = 'box';
         box.classList.add('inside-grid');
         box.classList.add(`BOX${j}-${i}`);
-        box.addEventListener('click', () => { Events.trigger('attackBox', player, [i, j]); });
+        box.addEventListener('click', () => {
+          if (player.isCPU && this.gameMode === 'solo') {
+            Events.trigger('attackBox', player, [i, j]); 
+          } else if (this.gameMode === 'versus') {
+            Events.trigger('attackBox', player, [i, j]); 
+          }
+        });
         row.append(box);
       }
 
