@@ -1,118 +1,83 @@
-import Ship from './ship.js';
+import Ship from "./ship.js";
 
 export default class Gameboard {
-  constructor (size = 10) {
-    this.board = [];
+  constructor(size = 10) {
     this.boardSize = size;
     this.ships = [];
-
-    for (let i = 0; i < this.boardSize; i++) {
-      this.board[i] = [];
-      for (let j = 0; j < this.boardSize; j++) {
-        this.board[i][j] = { hit: false, ship: null, coords: [j, i] };
-      }
-    }
+    this.board = this.#createEmptyBoard(size);
   }
 
-  receiveAttack (coords) {
-    const [col, row] = coords;
-    if (col < 0 || col > this.boardSize - 1 || row < 0 || row > this.boardSize - 1) {
-      throw new Error('Invalid coordinate: out of bounds.');
+  receiveAttack([x, y]) {
+    if (x < 0 || x > this.boardSize - 1 || y < 0 || y > this.boardSize - 1) {
+      throw new Error("Invalid coordinate: out of bounds.");
     }
 
-    const target = this.board[row][col];
-    if (target.hit === false) {
-      if (target.ship !== null) target.ship.hit();
-      target.hit = true;
-    } else {
-      throw new Error('Target already hit.');
-    }
+    const target = this.board[y][x];
+    if (target.hit) throw new Error("Target already hit.");
+
+    if (target.ship) target.ship.hit();
+    target.hit = true;
   }
 
-  // coords: [0,0] (in array form)
-  // orientation: horizontal, vertical
-  placeShip (coords, shipSize, orientation = 'horizontal') {
-    const [col, row] = coords;
-    const newShip = new Ship(shipSize);
+  placeShip([x, y], size, orientation = "horizontal") {
+    const newShip = new Ship(size);
 
-    // Validate ship placement based on orientation
-    if (orientation === 'horizontal') {
-      // Check if ship can fit horizontally on board
-      if (col < 0 || col >= this.boardSize || col + shipSize > this.boardSize) {
-        throw new Error('Invalid horizontal placement.');
-      }
+    const isOutOfBounds =
+      x < 0 ||
+      y < 0 ||
+      (orientation === "horizontal"
+        ? x + size > this.boardSize
+        : y + size > this.boardSize);
+    if (isOutOfBounds) throw new Error(`Invalid ${orientation} placement.`);
 
-      // Check if there are conflicts with other ships
-      for (let i = 0; i < shipSize; i++) {
-        if (this.board[row][col + i].ship) {
-          throw new Error('Square already occupied.');
-        }
-      }
-
-      // Assign squares with new ship
-      for (let i = 0; i < shipSize; i++) {
-        this.board[row][col + i].ship = newShip;
-      }
-    } else if (orientation === 'vertical') {
-      // Check if ship can fit vertically on board
-      if (row < 0 || row >= this.boardSize || row + shipSize > this.boardSize) {
-        throw new Error('Invalid vertical placement.');
-      }
-
-      // Check if there are conflicts with other ships
-      for (let i = 0; i < shipSize; i++) {
-        if (this.board[row + i][col].ship) {
-          throw new Error('Square already occupied.');
-        }
-      }
-      // Assign squares with new ship
-      for (let i = 0; i < shipSize; i++) {
-        this.board[row + i][col].ship = newShip;
-      }
-    } else {
-      throw new Error('Invalid orientation, choose either "horizontal" or "vertical".');
+    const checkConflict = (i) =>
+      orientation === "horizontal"
+        ? this.board[y][x + i].ship
+        : this.board[y + i][x].ship;
+    for (let i = 0; i < size; i++) {
+      if (checkConflict(i)) throw new Error("Box already occupied.");
     }
-    
+
+    for (let i = 0; i < size; i++) {
+      if (orientation === "horizontal") this.board[y][x + i].ship = newShip;
+      else this.board[y + i][x].ship = newShip;
+    }
+
     newShip.orientation = orientation;
-    newShip.origin = coords;
+    newShip.origin = [x, y];
     this.ships.push(newShip);
   }
 
-  // ex. ships = [5, 4, 3, 3, 2]
-  // 1 length-5 ship
-  // 1 length-4 ship
-  // 2 length-3 ships
-  // 1 length-2 ship
   randomizeShips(ships = [5, 4, 3, 3, 2]) {
-    for (let i = 0; i < ships.length; i++) {
+    ships.forEach((size) => {
       let placed = false;
       let attempts = 0;
 
-      while (!placed && attempts < 100) { // Retry up to 100 times
-        attempts++;
-        
-        // Get a random position and orientation
+      while (!placed && attempts < 100) {
+        attempts += 1;
         const x = this.#getRandomInt(this.boardSize);
         const y = this.#getRandomInt(this.boardSize);
-        const orientation = this.#getRandomInt(2) === 0 ? 'horizontal' : 'vertical';
-      
-        // Check if the ship can be placed without overlapping
-        placed = true;
+        const orientation =
+          this.#getRandomInt(2) === 0 ? "horizontal" : "vertical";
+
         try {
-          this.placeShip([x, y], ships[i], orientation);
+          this.placeShip([x, y], size, orientation);
+          placed = true;
         } catch {
           placed = false;
         }
       }
 
       if (!placed) {
-        throw new Error(`Cound not place ship of size ${ships[i]} after 100 attempts`);
+        throw new Error(
+          `Could not place ship of size ${size} after 100 attempts.`,
+        );
       }
-    }
+    });
   }
 
-  checkLoss () {
-    return this.ships.every(item => item && item.isSunk());
+  checkLoss() {
+    return this.ships.every((item) => item && item.isSunk());
   }
 
   reset() {
@@ -120,20 +85,27 @@ export default class Gameboard {
     this.ships = [];
   }
 
-  toString () {
-    let string = "";
-    for (let i = 0; i < this.boardSize; i++) {
-      for (let j = 0; j < this.boardSize; j++) {
-        const hit = this.board[i][j].hit;
-        const ship = this.board[i][j].ship;
-        if (hit === true && ship !== null) string += 'x ';
-        else if (hit === false && ship !== null) string += 'o ';
-        else if (hit === true && ship === null) string += '* ';
-        else string += ". ";
+  toString() {
+    let result = "";
+    for (let y = 0; y < this.boardSize; y++) {
+      for (let x = 0; x < this.boardSize; x++) {
+        const { hit, ship } = this.board[y][x];
+        if (hit) result += ship ? "x " : "* ";
+        else result += ship ? "o " : ". ";
       }
-      string += "\n";
+      result += "\n";
     }
-    return string;
+    return result;
+  }
+
+  #createEmptyBoard(size) {
+    return Array.from({ length: size }, (_, y) =>
+      Array.from({ length: size }, (_, x) => ({
+        hit: false,
+        ship: null,
+        coords: [x, y],
+      })),
+    );
   }
 
   #getRandomInt(max) {

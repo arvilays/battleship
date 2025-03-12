@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Inline:opsz,wght@10..72,100..900&family=Big+Shoulders:opsz,wght@10..72,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Big+Shoulders+Inline:opsz,wght@10..72,100..900&family=Big+Shoulders:opsz,wght@10..72,100..900&display=swap");
 /* fonts: 'big shoulders inline' 'big shoulders' */
 
 body {
   background-color: rgb(87, 156, 184);
-  font-family: 'big shoulders', Arial;
+  font-family: "big shoulders", Arial;
   font-size: 16px;
   font-weight: 600;
 }
@@ -11,8 +11,7 @@ body {
 /******** CONTAINER ********/
 @media only screen and (min-width: 0px) {
   .container {
-    
-  } 
+  }
 }
 
 /****** START ******/
@@ -31,7 +30,7 @@ body {
   }
 
   .start-title {
-    font-family: 'big shoulders inline';
+    font-family: "big shoulders inline";
     font-size: 12em;
     font-weight: 800;
     letter-spacing: -4px;
@@ -61,7 +60,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 100px;
-    
+
     height: 100vh;
 
     opacity: 0%;
@@ -70,7 +69,7 @@ body {
 }
 
 /**** BOARD ****/
-@media only screen and (min-width: 0px) {    
+@media only screen and (min-width: 0px) {
   .board-title {
     font-size: 3em;
     text-align: center;
@@ -120,10 +119,11 @@ body {
     margin-bottom: 35px;
   }
 
-  .ferry, .target {
+  .ferry,
+  .target {
     position: relative;
     z-index: -1;
-    
+
     display: flex;
     justify-content: center;
     transition: all 0.5s;
@@ -137,7 +137,8 @@ body {
     right: 25px;
   }
 
-  .ferry-image, .target-image {
+  .ferry-image,
+  .target-image {
     width: 50px;
   }
 

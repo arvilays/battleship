@@ -1,157 +1,175 @@
-import eyeOpenImage from '../images/eye-outline.svg';
-import eyeClosedImage from '../images/eye-closed.svg';
+import eyeOpenImage from "../images/eye-outline.svg";
+import eyeClosedImage from "../images/eye-closed.svg";
 
-import Events from './events.js';
+import Events from "./events.js";
 
 export default class Display {
-  constructor () {
-    this.start = document.querySelector('.start');
-    this.startSolo = document.querySelector('.start-solo');
-    this.startVersus = document.querySelector('.start-versus');
-    this.match = document.querySelector('.match');
-    this.boardOne = document.querySelector('.board-one');
-    this.boardTwo = document.querySelector('.board-two');
+  constructor() {
+    this.gameMode = "solo";
 
-    this.start.style.display = 'flex';
-    this.match.style.display = 'none';
+    this.start = document.querySelector(".start");
+    this.startSolo = document.querySelector(".start-solo");
+    this.startVersus = document.querySelector(".start-versus");
+    this.match = document.querySelector(".match");
+    this.boardOne = document.querySelector(".board-one");
+    this.boardTwo = document.querySelector(".board-two");
+
+    this.start.style.display = "flex";
+    this.match.style.display = "none";
   }
 
-  renderBoard (player) {
-    const boardGrid = player.gameboardDOM.querySelector('.board-grid');
+  renderBoard(player) {
+    const boardGrid = player.gameboardDOM.querySelector(".board-grid");
     const boardSize = player.gameboard.boardSize;
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    // Generate top row (numbers only)
-    const topRow = document.createElement('div');
-    topRow.className = 'row';
-    const blankBox = document.createElement('div');
-    blankBox.className = 'box';
-    topRow.append(blankBox);
+    const createBox = (classNames = [], textContent = "") => {
+      const box = document.createElement("div");
+      box.className = "box"; // Default class
+
+      // Add additional classes if any
+      classNames.forEach((className) => box.classList.add(className));
+
+      // Set the text content if provided
+      if (textContent) box.textContent = textContent;
+
+      return box;
+    };
+
+    // Create top row (numbers only)
+    const topRow = document.createElement("div");
+    topRow.className = "row";
+    topRow.append(createBox()); // Blank top-left corner box
     for (let i = 1; i <= boardSize; i++) {
-      const box = document.createElement('div');
-      box.className = 'box';
-      box.textContent = i;
-      topRow.append(box);
+      topRow.append(createBox([], i));
     }
     boardGrid.append(topRow);
 
-    // Generate other rows (letters and ship squares)
-    for (let i = 0; i < boardSize; i++) {
-      const row = document.createElement('div');
-      row.className = 'row';
+    // Create the rest of the rows (letters and boxes)
+    for (let y = 0; y < boardSize; y++) {
+      const row = document.createElement("div");
+      row.className = "row";
 
-      const letterBox = document.createElement('div');
-      letterBox.className = 'box';
-      letterBox.textContent = letters[i % 26];
-      row.append(letterBox);
+      // Letter box for the row
+      row.append(createBox([], letters[y % 26]));
 
-      for (let j = 0; j < boardSize; j++) {
-        const box = document.createElement('div');
-        box.className = 'box';
-        box.classList.add('inside-grid');
-        box.classList.add(`BOX${j}-${i}`);
-        box.addEventListener('click', () => {
-          if (player.isCPU && this.gameMode === 'solo') {
-            Events.trigger('attackBox', player, [i, j]); 
-          } else if (this.gameMode === 'versus') {
-            Events.trigger('attackBox', player, [i, j]); 
+      // Empty clickable boxes for inside the grid
+      for (let x = 0; x < boardSize; x++) {
+        const box = createBox(["inside-grid", `BOX${x}-${y}`], "");
+        box.addEventListener("click", () => {
+          if (
+            (player.isCPU && this.gameMode === "solo") ||
+            this.gameMode === "versus"
+          ) {
+            Events.trigger("attackBox", player, [y, x]);
           }
         });
         row.append(box);
       }
-
       boardGrid.append(row);
     }
   }
 
-  showBoard (player) {
-    const colors = ['purple', 'green', 'orange', 'royalblue', 'pink'];
-    this.colorAllShips(player, colors);
+  showBoard(player) {
+    this.colorAllShips(player, [
+      "purple",
+      "green",
+      "orange",
+      "royalblue",
+      "pink",
+    ]);
   }
 
-  hideBoard (player) {
-    const colors = ['white'];
-    this.colorAllShips(player, colors);
+  hideBoard(player) {
+    this.colorAllShips(player, ["white"]);
   }
 
-  updateTurn (playerOne, playerTwo) {
-    if (playerOne.isCurrentTurn) {
-      playerOne.gameboardDOM.querySelector('.ferry').style.left = '605px';
-      playerOne.gameboardDOM.querySelector('.target').style.top = '0px';
-      playerTwo.gameboardDOM.querySelector('.target').style.top = '200px';
-      playerOne.gameboardDOM.querySelector('.board-title').style.color = 'darkred';
-      playerTwo.gameboardDOM.querySelector('.board-title').style.color = 'green';
-      playerOne.gameboardDOM.querySelector('.board-grid').style.boxShadow = '0px 0px 50px red';
-      playerTwo.gameboardDOM.querySelector('.board-grid').style.boxShadow = 'revert';
-      playerOne.gameboardDOM.querySelector('.eye').style.bottom = '100px';
-      playerTwo.gameboardDOM.querySelector('.eye').style.bottom = '0px';
-    } else {
-      playerOne.gameboardDOM.querySelector('.ferry').style.left = '25px';
-      playerOne.gameboardDOM.querySelector('.target').style.top = '200px';
-      playerTwo.gameboardDOM.querySelector('.target').style.top = '0px';
-      playerOne.gameboardDOM.querySelector('.board-title').style.color = 'green';
-      playerTwo.gameboardDOM.querySelector('.board-title').style.color = 'darkred';
-      playerOne.gameboardDOM.querySelector('.board-grid').style.boxShadow = 'revert';
-      playerTwo.gameboardDOM.querySelector('.board-grid').style.boxShadow = '0px 0px 50px red';
-      playerOne.gameboardDOM.querySelector('.eye').style.bottom = '0px';
-      playerTwo.gameboardDOM.querySelector('.eye').style.bottom = '100px';
-    }
+  updateTurn(playerOne, playerTwo) {
+    const currentPlayer = playerOne.isCurrentTurn ? playerOne : playerTwo;
+    const otherPlayer = playerOne.isCurrentTurn ? playerTwo : playerOne;
+
+    this.setPlayerStyles(
+      currentPlayer,
+      "0px",
+      "darkred",
+      "0px 0px 50px red",
+      "100px",
+    );
+    this.setPlayerStyles(otherPlayer, "200px", "green", "revert", "0px");
+
+    // The ferry icon is located only on playerOne's gameboardDOM
+    const ferryLeft = playerOne.isCurrentTurn ? "605px" : "25px";
+    playerOne.gameboardDOM.querySelector(".ferry").style.left = ferryLeft;
   }
 
-  getShipBoxDOM (player, coords) {
-    const [row, col] = coords;
-    const coordString = `${col}-${row}`;
-    return player.gameboardDOM.querySelector(`.BOX${coordString}`);
+  setPlayerStyles(
+    player,
+    targetTop,
+    boardTitleColor,
+    gridBoxShadow,
+    eyeBottom,
+  ) {
+    const DOM = player.gameboardDOM;
+    DOM.querySelector(".target").style.top = targetTop;
+    DOM.querySelector(".board-title").style.color = boardTitleColor;
+    DOM.querySelector(".board-grid").style.boxShadow = gridBoxShadow;
+    DOM.querySelector(".eye").style.bottom = eyeBottom;
   }
 
-  // 'force' will color the ships regardless of hit/sunk status
-  colorAllShips (player, colors, force = false) {
+  getShipBoxDOM(player, [y, x]) {
+    return player.gameboardDOM.querySelector(`.BOX${x}-${y}`);
+  }
+
+  // 'force' will color all the player's ships regardless of hit/sunk status
+  colorAllShips(player, colors, force = false) {
     const ships = player.gameboard.ships;
-    for (let i = 0; i < ships.length; i++) {
-      const shipCoords = ships[i].getCoords();
-      for (let j = 0; j < shipCoords.length; j++) {
-        const [row, col] = shipCoords[j];
-        const shipBox = player.gameboard.board[col][row];
+
+    ships.forEach((ship, i) => {
+      const shipCoords = ship.getCoords();
+
+      shipCoords.forEach(([x, y]) => {
+        const shipBox = player.gameboard.board[y][x];
+
         if (shipBox.hit && !force) {
-          if (shipBox.ship.isSunk()) this.colorShip(player, shipCoords[j], 'darkred');
-          else this.colorShip(player, shipCoords[j], 'red');
-        } else this.colorShip(player, shipCoords[j], colors[i % colors.length]);
-      }
-    }
+          if (shipBox.ship.isSunk()) this.colorShip(player, [x, y], "darkred");
+          else this.colorShip(player, [x, y], "red");
+        } else this.colorShip(player, [x, y], colors[i % colors.length]);
+      });
+    });
   }
 
-  colorShip (player, coords, color) {
-    const [row, col] = coords;
-    const shipBox = this.getShipBoxDOM(player, coords);
-    if (shipBox) {
-      shipBox.style.backgroundColor = color;
-    } else {
-      throw new Error(`Element with class BOX${col}-${row} not found.`);
-    }
+  colorShip(player, [x, y], color) {
+    const shipBox = this.getShipBoxDOM(player, [x, y]);
+
+    if (shipBox) shipBox.style.backgroundColor = color;
+    else throw new Error(`Element with class BOX${x}-${y} not found.`);
   }
 
-  toggleScreens () {
-    const fadeDuration = 250;
-    if (this.start.style.display === 'flex') {
-      this.start.style.opacity = "0%";
+  toggleScreens() {
+    const transitionScreens = (
+      outElement,
+      inElement,
+      outOpacity,
+      inOpacity,
+      fadeDuration = 250,
+    ) => {
+      outElement.style.opacity = outOpacity;
       setTimeout(() => {
-        this.start.style.display = "none";
-        this.match.style.display = "flex";
+        outElement.style.display = "none";
+        inElement.style.display = "flex";
 
         setTimeout(() => {
-          this.match.style.opacity = "100%";
+          inElement.style.opacity = inOpacity;
         }, fadeDuration);
       }, fadeDuration);
+    };
+
+    const isStartScreenVisible = this.start.style.display === "flex";
+
+    if (isStartScreenVisible) {
+      transitionScreens(this.start, this.match, "0%", "100%");
     } else {
-      this.match.style.opacity = "0%";
-      setTimeout(() => {
-        this.match.style.display = "none";
-        this.start.style.display = "flex";
-
-        setTimeout(() => {
-          this.start.style.opacity = "100%";
-        }, fadeDuration);
-      }, fadeDuration);
+      transitionScreens(this.match, this.start, "0%", "100%");
     }
   }
 }
