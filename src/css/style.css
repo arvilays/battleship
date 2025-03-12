@@ -102,14 +102,16 @@ body {
     height: 40px;
     border: 1px solid skyblue;
   }
+  
+  .inside-grid {
+    background-color: white;
+
+    transition: all 0.5s;
+  }
 
   .inside-grid:hover {
     cursor: pointer;
-    background-color: rgb(223, 223, 223);
-  }
-
-  .inside-grid {
-    background-color: white;
+    filter: brightness(90%);
   }
 
   .indicator {
@@ -163,5 +165,14 @@ body {
   .eye-image:hover {
     cursor: pointer;
     opacity: 100%;
+  }
+
+  .eye-closed {
+    content: url('../images/eye-closed.svg');
+  }
+
+  .eye-opened {
+    opacity: 100%;
+    content: url('../images/eye-outline.svg');
   }
 }

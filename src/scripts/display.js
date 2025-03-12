@@ -7,15 +7,23 @@ export default class Display {
   constructor() {
     this.gameMode = "solo";
 
+    this.playerOne = null;
+    this.playerTwo = null;
+
     this.start = document.querySelector(".start");
     this.startSolo = document.querySelector(".start-solo");
     this.startVersus = document.querySelector(".start-versus");
     this.match = document.querySelector(".match");
     this.boardOne = document.querySelector(".board-one");
     this.boardTwo = document.querySelector(".board-two");
+    this.boardOneEye = this.boardOne.querySelector(".eye-image");
+    this.boardTwoEye = this.boardTwo.querySelector(".eye-image");
 
     this.start.style.display = "flex";
     this.match.style.display = "none";
+
+    this.boardOneEye.addEventListener("click", () => { this.toggleEye(this.playerOne, this.boardOneEye); });
+    this.boardTwoEye.addEventListener("click", () => { this.toggleEye(this.playerTwo, this.boardTwoEye); });
   }
 
   renderBoard(player) {
@@ -100,6 +108,8 @@ export default class Display {
     // The ferry icon is located only on playerOne's gameboardDOM
     const ferryLeft = playerOne.isCurrentTurn ? "605px" : "25px";
     playerOne.gameboardDOM.querySelector(".ferry").style.left = ferryLeft;
+
+    if (this.gameMode === 'versus') this.closeAllEyes();
   }
 
   setPlayerStyles(
@@ -131,8 +141,8 @@ export default class Display {
         const shipBox = player.gameboard.board[y][x];
 
         if (shipBox.hit && !force) {
-          if (shipBox.ship.isSunk()) this.colorShip(player, [x, y], "darkred");
-          else this.colorShip(player, [x, y], "red");
+          if (shipBox.ship.isSunk()) this.colorShip(player, [x, y], "black");
+          else this.colorShip(player, [x, y], "darkred");
         } else this.colorShip(player, [x, y], colors[i % colors.length]);
       });
     });
@@ -171,5 +181,29 @@ export default class Display {
     } else {
       transitionScreens(this.match, this.start, "0%", "100%");
     }
+  }
+
+  toggleEye(player, eye) {
+    const isEyeClosed = eye.classList.contains('eye-closed');
+
+    if (isEyeClosed) {
+      this.setEyeState(eye, 'opened');
+      this.showBoard(player);
+    } else {
+      this.setEyeState(eye, 'closed');
+      this.hideBoard(player);
+    }
+  }
+
+  setEyeState(eye, state) {
+    eye.classList.remove('eye-closed', 'eye-opened');
+    eye.classList.add(`eye-${state}`);
+  }
+
+  closeAllEyes() {
+    this.setEyeState(this.boardOneEye, 'closed');
+    this.setEyeState(this.boardTwoEye, 'closed');
+    this.hideBoard(this.playerOne);
+    this.hideBoard(this.playerTwo);
   }
 }

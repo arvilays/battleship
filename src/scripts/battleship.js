@@ -20,73 +20,14 @@ export default class Battleship {
     Events.subscribe("endGame", this.#endGame.bind(this));
   }
 
-  // // Game Modes: 'solo', 'versus'
-  // // If a player hits a ship, they get an additional attack
-  // startGame(gameMode) {
-  //   this.gameMode = gameMode;
-  //   this.gameStarted = true;
-  //   const setupPlayer = (name, board) => {
-  //     const player = new Player(name, board);
-  //     player.gameboardDOM.querySelector(".board-title").textContent =
-  //       player.name;
-  //     return player;
-  //   };
-
-  //   // Setup Player 1
-  //   this.playerOne = setupPlayer("Player 1", this.display.boardOne);
-  //   this.playerOne.gameboard.randomizeShips(); // REMOVE LATER
-  //   this.playerOne.isCurrentTurn =
-  //     gameMode === "solo" ? false : this.#getRandomInt(2) === 0;
-
-  //   // Setup Player 2 (either CPU in solo mode or Player 2 in versus mode)
-  //   if (gameMode === "solo") {
-  //     this.display.gameMode = "solo";
-  //     this.cpuShipHits = [];
-  //     this.playerTwo = setupPlayer("CPU", this.display.boardTwo);
-  //     this.playerTwo.gameboard.randomizeShips(); // REMOVE LATER
-  //     this.playerTwo.isCurrentTurn = true;
-  //     this.playerTwo.isCPU = true;
-  //     this.playerOne.gameboardDOM.querySelector(".eye").style.visibility =
-  //       "hidden";
-  //     this.playerTwo.gameboardDOM.querySelector(".eye").style.visibility =
-  //       "hidden";
-  //   } else {
-  //     // versus
-  //     this.display.gameMode = "versus";
-  //     this.playerTwo = setupPlayer("Player 2", this.display.boardTwo);
-  //     this.playerTwo.gameboard.randomizeShips();
-  //     this.playerTwo.isCurrentTurn = this.playerOne.isCurrentTurn
-  //       ? false
-  //       : true;
-  //     this.playerOne.gameboardDOM.querySelector(".eye").style.visibility =
-  //       "visible";
-  //     this.playerTwo.gameboardDOM.querySelector(".eye").style.visibility =
-  //       "visible";
-  //   }
-
-  //   // Render and show the boards
-  //   this.display.renderBoard(this.playerOne);
-  //   this.display.renderBoard(this.playerTwo);
-  //   this.display.showBoard(this.playerOne);
-  //   if (gameMode === "versus") this.display.showBoard(this.playerTwo);
-  //   this.display.toggleScreens(); // Switch from title screen to game screen
-  //   this.display.updateTurn(this.playerOne, this.playerTwo);
-  // }
-
   // Game Modes: 'solo', 'versus'
   startGame(gameMode) {
     this.gameMode = gameMode;
     this.gameStarted = true;
 
-    const setupPlayer = (name, board) => {
-      const player = new Player(name, board);
-      player.gameboardDOM.querySelector(".board-title").textContent =
-        player.name;
-      return player;
-    };
-
     // Setup Player 1
-    this.playerOne = setupPlayer("Player 1", this.display.boardOne);
+    this.playerOne = this.#setupPlayer("Player 1", this.display.boardOne);
+    this.display.playerOne = this.playerOne;
     this.playerOne.gameboard.randomizeShips(); // REMOVE LATER
     this.playerOne.isCurrentTurn =
       gameMode === "solo" ? false : this.#getRandomInt(2) === 0;
@@ -97,6 +38,7 @@ export default class Battleship {
     } else {
       this.startVersusGame();
     }
+    this.display.playerTwo = this.playerTwo;
 
     // Render and show the boards
     this.display.renderBoard(this.playerOne);
@@ -111,7 +53,7 @@ export default class Battleship {
     this.display.gameMode = "solo";
 
     // Setup Player 2 (CPU)
-    this.playerTwo = new Player("CPU", this.display.boardTwo);
+    this.playerTwo = this.#setupPlayer("CPU", this.display.boardTwo);
     this.playerTwo.gameboard.randomizeShips(); // REMOVE LATER
     this.playerTwo.isCurrentTurn = true;
     this.playerTwo.isCPU = true;
@@ -127,7 +69,7 @@ export default class Battleship {
     this.display.gameMode = "versus";
 
     // Setup Player 2 (Player 2 in versus mode)
-    this.playerTwo = new Player("Player 2", this.display.boardTwo);
+    this.playerTwo = this.#setupPlayer("Player 2", this.display.boardTwo);
     this.playerTwo.gameboard.randomizeShips();
     this.playerTwo.isCurrentTurn = !this.playerOne.isCurrentTurn;
 
@@ -173,6 +115,13 @@ export default class Battleship {
     }
 
     return shipBox;
+  }
+
+  #setupPlayer (name, board) {
+    const player = new Player(name, board);
+    player.gameboardDOM.querySelector(".board-title").textContent =
+      player.name;
+    return player;
   }
 
   #cpuAttack(player) {
