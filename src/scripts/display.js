@@ -1,6 +1,3 @@
-import eyeOpenImage from "../images/eye-outline.svg";
-import eyeClosedImage from "../images/eye-closed.svg";
-
 import Events from "./events.js";
 
 export default class Display {
@@ -14,16 +11,40 @@ export default class Display {
     this.startSolo = document.querySelector(".start-solo");
     this.startVersus = document.querySelector(".start-versus");
     this.match = document.querySelector(".match");
+    this.gamePrep = document.querySelector(".game-prep");
+    this.startGame = document.querySelector(".start-game");
     this.boardOne = document.querySelector(".board-one");
     this.boardTwo = document.querySelector(".board-two");
     this.boardOneEye = this.boardOne.querySelector(".eye-image");
     this.boardTwoEye = this.boardTwo.querySelector(".eye-image");
+    this.messageOne = document.querySelector(".message-one");
+    this.messageTwo = document.querySelector(".message-two");
+    this.randomizeOne = document.querySelector(".randomize-one");
+    this.randomizeTwo = document.querySelector(".randomize-two");
+    this.reminder = document.querySelector(".reminder");
 
     this.start.style.display = "flex";
     this.match.style.display = "none";
 
+    this.startSolo.addEventListener("click", () => { Events.trigger("initializeGame", "solo"); });
+    this.startVersus.addEventListener("click", () => { Events.trigger("initializeGame", "versus"); });
+    this.startGame.addEventListener("click", () => { Events.trigger("startGame"); });
     this.boardOneEye.addEventListener("click", () => { this.toggleEye(this.playerOne, this.boardOneEye); });
     this.boardTwoEye.addEventListener("click", () => { this.toggleEye(this.playerTwo, this.boardTwoEye); });
+    this.randomizeOne.addEventListener("click", () => { 
+      this.playerOne.gameboard.reset();
+      this.playerOne.gameboard.randomizeShips();
+      this.colorAllBoxes(this.playerOne);
+      this.showBoard(this.playerOne);
+      this.setEyeState(this.boardOneEye, 'opened');
+    });
+    this.randomizeTwo.addEventListener("click", () => { 
+      this.playerTwo.gameboard.reset();
+      this.playerTwo.gameboard.randomizeShips();
+      this.colorAllBoxes(this.playerTwo);
+      this.showBoard(this.playerTwo);
+      this.setEyeState(this.boardTwoEye, 'opened');
+    });
   }
 
   renderBoard(player) {
@@ -33,7 +54,7 @@ export default class Display {
 
     const createBox = (classNames = [], textContent = "") => {
       const box = document.createElement("div");
-      box.className = "box"; // Default class
+      box.className = "box noselect"; // Default class
 
       // Add additional classes if any
       classNames.forEach((className) => box.classList.add(className));
@@ -123,11 +144,21 @@ export default class Display {
     DOM.querySelector(".target").style.top = targetTop;
     DOM.querySelector(".board-title").style.color = boardTitleColor;
     DOM.querySelector(".board-grid").style.boxShadow = gridBoxShadow;
-    DOM.querySelector(".eye").style.bottom = eyeBottom;
+    if (this.gameStarted) DOM.querySelector(".eye-image").style.bottom = eyeBottom;
   }
 
   getShipBoxDOM(player, [y, x]) {
     return player.gameboardDOM.querySelector(`.BOX${x}-${y}`);
+  }
+
+  colorAllBoxes(player, color = "white") {
+    const boardSize = player.gameboard.boardSize;
+    for (let y = 0; y < boardSize; y++) {
+      for (let x = 0; x < boardSize; x++) {
+        const box = this.getShipBoxDOM(player, [x, y]);
+        box.style.backgroundColor = color;
+      }
+    }
   }
 
   // 'force' will color all the player's ships regardless of hit/sunk status
@@ -184,20 +215,14 @@ export default class Display {
   }
 
   toggleEye(player, eye) {
-    const isEyeClosed = eye.classList.contains('eye-closed');
-
-    if (isEyeClosed) {
-      this.setEyeState(eye, 'opened');
-      this.showBoard(player);
-    } else {
-      this.setEyeState(eye, 'closed');
-      this.hideBoard(player);
-    }
+    const isClosed = eye.classList.contains("eye-closed");
+    this.setEyeState(eye, isClosed ? "opened" : "closed");
+    isClosed ? this.showBoard(player) : this.hideBoard(player);
   }
 
   setEyeState(eye, state) {
-    eye.classList.remove('eye-closed', 'eye-opened');
-    eye.classList.add(`eye-${state}`);
+    eye.classList.toggle('eye-closed', state === "closed");
+    eye.classList.toggle('eye-opened', state === "opened");
   }
 
   closeAllEyes() {
@@ -205,5 +230,27 @@ export default class Display {
     this.setEyeState(this.boardTwoEye, 'closed');
     this.hideBoard(this.playerOne);
     this.hideBoard(this.playerTwo);
+  }
+
+  showEyes() {
+    document.querySelectorAll(".eye-image").forEach(eye => {
+      eye.style.visibility = 'visible';
+    });
+  }
+
+  hideEyes() {
+    document.querySelectorAll(".eye-image").forEach(eye => {
+      eye.style.visibility = 'hidden';
+    });
+  }
+
+  showMessages() {
+    this.messageOne.style.visibility = 'visible';
+    this.messageTwo.style.visibility = 'visible';
+  } 
+
+  hideMessages() {
+    this.messageOne.style.visibility = 'hidden';
+    this.messageTwo.style.visibility = 'hidden';
   }
 }

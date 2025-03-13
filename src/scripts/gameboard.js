@@ -81,7 +81,7 @@ export default class Gameboard {
   }
 
   reset() {
-    this.board = [];
+    this.board = this.#createEmptyBoard(this.boardSize);
     this.ships = [];
   }
 
