@@ -6,27 +6,32 @@ export default class Battleship {
     this.display = display;
     this.gameMode = "solo";
     this.gameStarted = false;
+    this.playerOne = null;
+    this.playerTwo = null;
     this.cpuShipHits = [];
 
     Events.subscribe("initializeGame", this.initializeGame.bind(this));
     Events.subscribe("startGame", this.startGame.bind(this));
     Events.subscribe("attackBox", this.attackBox.bind(this));
+    Events.subscribe("toggleBoardVisibility", this.toggleBoardVisibility.bind(this));
+    Events.subscribe("randomizeBoard", this.randomizeBoard.bind(this));
     Events.subscribe("endTurn", this.#endTurn.bind(this));
     Events.subscribe("endGame", this.#endGame.bind(this));
   }
 
   startGame() {
     this.gameStarted = true;
-    this.display.gameStarted = true;
     this.display.gamePrep.style.opacity = '0%';
+
     if (this.gameMode === 'versus') {
-      this.display.showEyes();
+      this.display.closeAllEyes();
       this.display.reminder.style.opacity = "0%";
     }
-    this.display.match.querySelectorAll(".randomize").forEach(item => {
-      item.style.opacity = '0%';
-    })
-    this.display.updateTurn(this.playerOne, this.playerTwo);
+    
+    this.display.randomizeOne.style.opacity = "0%";
+    this.display.randomizeTwo.style.opacity = "0%";
+
+    this.display.styleTurn(this.playerOne, this.playerTwo);
   }
 
   // Game Modes: 'solo', 'versus'
@@ -35,8 +40,8 @@ export default class Battleship {
     this.display.hideEyes();
 
     // Setup Player 1
-    this.playerOne = this.#setupPlayer("Player 1", this.display.boardOne);
-    this.playerTwo = this.#setupPlayer(gameMode === 'solo' ? "CPU" : "Player 2", this.display.boardTwo);
+    this.playerOne = this.#setupPlayer("Player 1", 1, this.display.boardOne);
+    this.playerTwo = this.#setupPlayer(gameMode === 'solo' ? "CPU" : "Player 2", 2, this.display.boardTwo);
     this.display.playerOne = this.playerOne;
     this.display.playerTwo = this.playerTwo;
     this.playerOne.gameboard.randomizeShips();
@@ -55,7 +60,13 @@ export default class Battleship {
       this.initializeVersusGame();
     }
 
-    this.display.updateTurn(this.playerOne, this.playerTwo);
+    this.display.styleTurn(this.playerOne, this.playerTwo);
+
+    if (gameMode === "versus") {
+      this.display.boardOne.querySelector(".eye-image").style.bottom = '0px';
+      this.display.boardTwo.querySelector(".eye-image").style.bottom = '0px';
+    }
+
     this.display.toggleScreens(); // Switch from title screen to game screen
   }
 
@@ -66,10 +77,10 @@ export default class Battleship {
     this.playerTwo.isCurrentTurn = true;
     this.playerTwo.isCPU = true;
 
-    this.display.showBoard(this.playerOne);
-    this.display.boardOne.querySelector('.randomize').style.visibility = 'visible';
-    this.display.boardTwo.querySelector('.randomize').style.visibility = 'hidden';
-    this.display.boardOne.querySelector('.randomize').style.bottom = '40px';
+    this.display.showBoardShips(this.playerOne);
+    this.display.randomizeOne.style.visibility = 'visible';
+    this.display.randomizeOne.style.bottom = '40px';
+    this.display.randomizeTwo.style.visibility = 'hidden';
   }
 
   initializeVersusGame() {
@@ -79,15 +90,13 @@ export default class Battleship {
     this.playerTwo.isCurrentTurn = !this.playerOne.isCurrentTurn;
 
     this.display.showEyes();
-    this.display.boardOne.querySelector(".eye-image").style.bottom = '0px';
-    this.display.boardTwo.querySelector(".eye-image").style.bottom = '0px';
-    this.display.boardOne.querySelector('.randomize').style.visibility = 'visible';
-    this.display.boardTwo.querySelector('.randomize').style.visibility = 'visible';
-    this.display.boardOne.querySelector('.randomize').style.bottom = '-12px';
-    this.display.boardTwo.querySelector('.randomize').style.bottom = '-12px';
+    this.display.setEyeState(this.display.eyeOne, 'closed');
+    this.display.setEyeState(this.display.eyeTwo, 'closed');
+    this.display.randomizeOne.style.visibility = 'visible';
+    this.display.randomizeOne.style.bottom = '-12px';
+    this.display.randomizeTwo.style.visibility = 'visible';
+    this.display.randomizeTwo.style.bottom = '-12px';
     this.display.reminder.style.opacity = "20%";
-    this.display.showBoard(this.playerOne);
-    this.display.showBoard(this.playerTwo);
   }
 
   attackBox(player, [x, y]) {
@@ -127,10 +136,38 @@ export default class Battleship {
     return shipBox;
   }
 
-  #setupPlayer (name, board) {
-    const player = new Player(name, board);
-    player.gameboardDOM.querySelector(".board-title").textContent =
-      player.name;
+  toggleBoardVisibility(position) {
+    const player = position === 1 ? this.playerOne : this.playerTwo;
+    const eye = position === 1 ? this.display.eyeOne : this.display.eyeTwo;
+
+    // Toggle eye state
+    const isClosed = eye.classList.contains("eye-closed");
+    this.display.setEyeState(eye, isClosed ? "opened" : "closed");
+
+    if (position === 1) this.display.boardOneVisible = !this.display.boardOneVisible;
+    else this.display.boardTwoVisible = !this.display.boardTwoVisible;
+
+    // Show or hide ships based on board visibility
+    const boardVisible = position === 1 ? this.display.boardOneVisible : this.display.boardTwoVisible;
+    if (boardVisible) this.display.hideBoardShips(player);
+    else this.display.showBoardShips(player);
+  }
+
+  randomizeBoard(position) {
+    const player = position === 1 ? this.playerOne : this.playerTwo;
+    player.gameboard.reset();
+    player.gameboard.randomizeShips();
+    this.display.colorAllBoxes(player);
+    this.display.showBoardShips(player);
+    this.display.setEyeState(player.position === 1 ? this.display.eyeOne : this.display.eyeTwo, 'opened');
+
+    if (position === 1) this.display.boardOneVisible = false;
+    else this.display.boardTwoVisible = false;
+  }
+
+  #setupPlayer (name, position, board) {
+    const player = new Player(name, position);
+    board.querySelector(".board-title").textContent = player.name;
     return player;
   }
 
@@ -225,7 +262,8 @@ export default class Battleship {
     this.playerTwo.isCurrentTurn = !this.playerTwo.isCurrentTurn;
 
     // Update display with current turn
-    this.display.updateTurn(this.playerOne, this.playerTwo);
+    this.display.styleTurn(this.playerOne, this.playerTwo);
+    if (this.gameMode === 'versus') this.display.closeAllEyes();
 
     // If it's Player 1's turn and game mode is solo, let the CPU attack
     if (
@@ -240,12 +278,16 @@ export default class Battleship {
   }
 
   #endGame(loser) {
-    loser.gameboardDOM.querySelector('.board-grid').style.backgroundColor = "darkred";
-    loser.gameboardDOM.querySelectorAll('.box').forEach(box => {
+    // Style loser's board
+    let loserDOM = loser.position === 1 ? this.display.boardOne : this.display.boardTwo;
+    loserDOM.querySelector('.message').textContent = "YOU LOSE!";
+    loserDOM.querySelector('.board-grid').style.backgroundColor = "darkred";
+    loserDOM.querySelectorAll('.box').forEach(box => {
       box.style.border = "1px solid darkred"; 
     });
-    loser.gameboardDOM.querySelector('.message').textContent = "YOU LOSE!";
+
     this.display.showMessages();
+    
     this.playerOne.isCurrentTurn = false;
     this.playerTwo.isCurrentTurn = false;
     this.gameStarted = false;

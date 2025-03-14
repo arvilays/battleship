@@ -14,6 +14,7 @@ export default class Ship {
     return this.timesHit >= this.length;
   }
 
+  // Returns all coordinates of the ship using the origin and length as reference
   getCoords() {
     const [xOrigin, yOrigin] = this.origin;
     const [xOffset, yOffset] =

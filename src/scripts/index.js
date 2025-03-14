@@ -4,8 +4,7 @@ import Display from "./display.js";
 import Battleship from "./battleship.js";
 
 const main = () => {
-  const display = new Display();
-  const battleship = new Battleship(display);
+  const battleship = new Battleship(new Display());
 };
 
 main();

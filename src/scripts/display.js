@@ -2,11 +2,6 @@ import Events from "./events.js";
 
 export default class Display {
   constructor() {
-    this.gameMode = "solo";
-
-    this.playerOne = null;
-    this.playerTwo = null;
-
     this.start = document.querySelector(".start");
     this.startSolo = document.querySelector(".start-solo");
     this.startVersus = document.querySelector(".start-versus");
@@ -14,41 +9,33 @@ export default class Display {
     this.gamePrep = document.querySelector(".game-prep");
     this.startGame = document.querySelector(".start-game");
     this.boardOne = document.querySelector(".board-one");
+    this.ferry = document.querySelector(".ferry");
+    this.eyeOne = this.boardOne.querySelector(".eye-image");
+    this.messageOne = this.boardOne.querySelector(".message");
+    this.randomizeOne = this.boardOne.querySelector(".randomize");
     this.boardTwo = document.querySelector(".board-two");
-    this.boardOneEye = this.boardOne.querySelector(".eye-image");
-    this.boardTwoEye = this.boardTwo.querySelector(".eye-image");
-    this.messageOne = document.querySelector(".message-one");
-    this.messageTwo = document.querySelector(".message-two");
-    this.randomizeOne = document.querySelector(".randomize-one");
-    this.randomizeTwo = document.querySelector(".randomize-two");
+    this.eyeTwo = this.boardTwo.querySelector(".eye-image");
+    this.messageTwo = this.boardTwo.querySelector(".message");
+    this.randomizeTwo = this.boardTwo.querySelector(".randomize");
     this.reminder = document.querySelector(".reminder");
 
+    this.boardOneVisible = true;
+    this.boardTwoVisible = true;
     this.start.style.display = "flex";
     this.match.style.display = "none";
 
     this.startSolo.addEventListener("click", () => { Events.trigger("initializeGame", "solo"); });
     this.startVersus.addEventListener("click", () => { Events.trigger("initializeGame", "versus"); });
     this.startGame.addEventListener("click", () => { Events.trigger("startGame"); });
-    this.boardOneEye.addEventListener("click", () => { this.toggleEye(this.playerOne, this.boardOneEye); });
-    this.boardTwoEye.addEventListener("click", () => { this.toggleEye(this.playerTwo, this.boardTwoEye); });
-    this.randomizeOne.addEventListener("click", () => { 
-      this.playerOne.gameboard.reset();
-      this.playerOne.gameboard.randomizeShips();
-      this.colorAllBoxes(this.playerOne);
-      this.showBoard(this.playerOne);
-      this.setEyeState(this.boardOneEye, 'opened');
-    });
-    this.randomizeTwo.addEventListener("click", () => { 
-      this.playerTwo.gameboard.reset();
-      this.playerTwo.gameboard.randomizeShips();
-      this.colorAllBoxes(this.playerTwo);
-      this.showBoard(this.playerTwo);
-      this.setEyeState(this.boardTwoEye, 'opened');
-    });
+    this.eyeOne.addEventListener("click", () => { Events.trigger("toggleBoardVisibility", 1); });
+    this.eyeTwo.addEventListener("click", () => { Events.trigger("toggleBoardVisibility", 2); });
+    this.randomizeOne.addEventListener("click", () => { Events.trigger("randomizeBoard", 1) });
+    this.randomizeTwo.addEventListener("click", () => { Events.trigger("randomizeBoard", 2) });
   }
 
   renderBoard(player) {
-    const boardGrid = player.gameboardDOM.querySelector(".board-grid");
+    const board = player.position === 1 ? this.boardOne : this.boardTwo;
+    const boardGrid = board.querySelector(".board-grid");
     const boardSize = player.gameboard.boardSize;
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -99,7 +86,12 @@ export default class Display {
     }
   }
 
-  showBoard(player) {
+  getShipBoxDOM(player, [y, x]) {
+    const board = player.position === 1 ? this.boardOne : this.boardTwo;
+    return board.querySelector(`.BOX${x}-${y}`);
+  }
+
+  showBoardShips(player) {
     this.colorAllShips(player, [
       "purple",
       "green",
@@ -109,46 +101,8 @@ export default class Display {
     ]);
   }
 
-  hideBoard(player) {
+  hideBoardShips(player) {
     this.colorAllShips(player, ["white"]);
-  }
-
-  updateTurn(playerOne, playerTwo) {
-    const currentPlayer = playerOne.isCurrentTurn ? playerOne : playerTwo;
-    const otherPlayer = playerOne.isCurrentTurn ? playerTwo : playerOne;
-
-    this.setPlayerStyles(
-      currentPlayer,
-      "0px",
-      "darkred",
-      "0px 0px 50px red",
-      "100px",
-    );
-    this.setPlayerStyles(otherPlayer, "200px", "green", "revert", "0px");
-
-    // The ferry icon is located only on playerOne's gameboardDOM
-    const ferryLeft = playerOne.isCurrentTurn ? "605px" : "25px";
-    playerOne.gameboardDOM.querySelector(".ferry").style.left = ferryLeft;
-
-    if (this.gameMode === 'versus') this.closeAllEyes();
-  }
-
-  setPlayerStyles(
-    player,
-    targetTop,
-    boardTitleColor,
-    gridBoxShadow,
-    eyeBottom,
-  ) {
-    const DOM = player.gameboardDOM;
-    DOM.querySelector(".target").style.top = targetTop;
-    DOM.querySelector(".board-title").style.color = boardTitleColor;
-    DOM.querySelector(".board-grid").style.boxShadow = gridBoxShadow;
-    if (this.gameStarted) DOM.querySelector(".eye-image").style.bottom = eyeBottom;
-  }
-
-  getShipBoxDOM(player, [y, x]) {
-    return player.gameboardDOM.querySelector(`.BOX${x}-${y}`);
   }
 
   colorAllBoxes(player, color = "white") {
@@ -186,6 +140,27 @@ export default class Display {
     else throw new Error(`Element with class BOX${x}-${y} not found.`);
   }
 
+  styleTurn(playerOne, playerTwo) {
+    const currentPlayer = playerOne.isCurrentTurn ? playerOne : playerTwo;
+    const otherPlayer = playerOne.isCurrentTurn ? playerTwo : playerOne;
+
+    const setPlayerStyles = (player, targetTop, boardTitleColor, gridBoxShadow, eyeBottom) => {
+      const board = player.position === 1 ? this.boardOne : this.boardTwo;
+      board.querySelector(".target").style.top = targetTop;
+      board.querySelector(".board-title").style.color = boardTitleColor;
+      board.querySelector(".board-grid").style.boxShadow = gridBoxShadow;
+      board.querySelector(".eye-image").style.bottom = eyeBottom;
+    };
+
+    setPlayerStyles(currentPlayer, "0px", "darkred", "0px 0px 50px red", "100px");
+    setPlayerStyles(otherPlayer, "200px", "green", "revert", "0px");
+
+    // The ferry icon is located only on playerOne's DOM
+    const ferryLeft = playerOne.isCurrentTurn ? "605px" : "25px";
+    this.ferry.style.left = ferryLeft;
+  }
+
+  // Toggle between title screen and game screen
   toggleScreens() {
     const transitionScreens = (
       outElement,
@@ -214,22 +189,18 @@ export default class Display {
     }
   }
 
-  toggleEye(player, eye) {
-    const isClosed = eye.classList.contains("eye-closed");
-    this.setEyeState(eye, isClosed ? "opened" : "closed");
-    isClosed ? this.showBoard(player) : this.hideBoard(player);
-  }
-
   setEyeState(eye, state) {
     eye.classList.toggle('eye-closed', state === "closed");
     eye.classList.toggle('eye-opened', state === "opened");
   }
 
   closeAllEyes() {
-    this.setEyeState(this.boardOneEye, 'closed');
-    this.setEyeState(this.boardTwoEye, 'closed');
-    this.hideBoard(this.playerOne);
-    this.hideBoard(this.playerTwo);
+    this.setEyeState(this.eyeOne, 'closed');
+    this.setEyeState(this.eyeTwo, 'closed');
+    this.hideBoardShips(this.playerOne);
+    this.hideBoardShips(this.playerTwo);
+    this.boardOneVisible = true;
+    this.boardTwoVisible = true;
   }
 
   showEyes() {
@@ -245,12 +216,8 @@ export default class Display {
   }
 
   showMessages() {
-    this.messageOne.style.visibility = 'visible';
-    this.messageTwo.style.visibility = 'visible';
+    document.querySelectorAll(".message").forEach(message => {
+      message.style.visibility = 'visible';
+    });
   } 
-
-  hideMessages() {
-    this.messageOne.style.visibility = 'hidden';
-    this.messageTwo.style.visibility = 'hidden';
-  }
 }
