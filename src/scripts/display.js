@@ -23,6 +23,7 @@ export default class Display {
     this.boardTwoVisible = true;
     this.start.style.display = "flex";
     this.match.style.display = "none";
+    document.querySelector("body").style.display = "initial"; // Prevent flashing on reload
 
     this.startSolo.addEventListener("click", () => { Events.trigger("initializeGame", "solo"); });
     this.startVersus.addEventListener("click", () => { Events.trigger("initializeGame", "versus"); });

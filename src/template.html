@@ -7,7 +7,7 @@
     <script src="scripts/index.js" type="module"></script>
     <title>Battleship</title>
   </head>
-  <body>
+  <body style="display:none">
     <div class="container">
       <div class="start">
         <div class="start-title noselect">BATTLESHIP</div>
@@ -24,45 +24,34 @@
         <div class="game-area">
           <div class="board board-one">
             <div class="message message-one">YOU WIN!</div>
-
             <div class="indicator">
               <div class="ferry">
                 <img class="ferry-image noselect" src="./images/ferry.svg" title="Current Attacker" />
               </div>
-
               <div class="target">
                 <img class="target-image noselect" src="./images/target-variant.svg" />
               </div>
             </div>
-
             <div class="board-title board-one-title">PLAYER 1</div>
-
             <div class="board-grid board-one-grid"></div>
-
             <div class="eye">
               <img class="eye-image eye-opened noselect" src="./images/eye-outline.svg" title="Show/Hide Board" />
             </div>
-
             <div class="randomize randomize-one noselect">⟳ Randomize Ships</div>
           </div>
 
           <div class="board board-two">
             <div class="message message-two">YOU WIN!</div>
-
             <div class="indicator">
               <div class="target" style="left: 0px">
                 <img class="target-image noselect" src="./images/target-variant.svg" />
               </div>
             </div>
-
             <div class="board-title board-two-title">CPU</div>
-
             <div class="board-grid board-two-grid"></div>
-
             <div class="eye">
               <img class="eye-image eye-opened noselect" src="./images/eye-outline.svg" title="Show/Hide Board" />
             </div>
-
             <div class="randomize randomize-two noselect">⟳ Randomize Ships</div>
           </div>
         </div>
